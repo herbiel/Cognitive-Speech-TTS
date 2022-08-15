@@ -413,12 +413,30 @@ static apt_bool_t ms_recog_channel_recognize(mrcp_engine_channel_t* channel,
             {
                 recog_channel->resource->result = e.Result->Text;
                 ms_recog_recognition_complete(recog_channel, RECOGNIZER_COMPLETION_CAUSE_SUCCESS);
+                try
+                {
+                    recog_channel->resource->recognizer->StopContinuousRecognitionAsync();
+                }
+                catch(...)
+                {
+                    apt_log(RECOG_LOG_MARK, APT_PRIO_DEBUG,
+                            "Stop recognizer failed. Maybe reset already.");
+                }
             }
         }
         else if(e.Result->Reason == ResultReason::NoMatch)
         {
             apt_log(RECOG_LOG_MARK, APT_PRIO_INFO, "NO MATCH: Speech could not be recognized.");
             ms_recog_recognition_complete(recog_channel, RECOGNIZER_COMPLETION_CAUSE_NO_MATCH);
+            try
+            {
+                recog_channel->resource->recognizer->StopContinuousRecognitionAsync();
+            }
+            catch(...)
+            {
+                apt_log(RECOG_LOG_MARK, APT_PRIO_DEBUG,
+                        "Stop recognizer failed. Maybe reset already.");
+            }
         }
     });
 
@@ -539,7 +557,7 @@ static apt_bool_t ms_recog_result_load(ms_recog_channel_t* recog_channel, mrcp_m
     const auto body = &message->body;
 
     const auto result = recog_channel->resource->result.c_str();
-    body->buf = apr_psprintf(message->pool,
+/*    body->buf = apr_psprintf(message->pool,
                              "<?xml version=\"1.0\"?>\n"
                              "<result>\n"
                              "  <interpretation confidence=\"%d\">\n"
@@ -548,6 +566,11 @@ static apt_bool_t ms_recog_result_load(ms_recog_channel_t* recog_channel, mrcp_m
                              "  </interpretation>\n"
                              "</result>\n",
                              99, result, result);
+                             */
+    body->buf = apr_psprintf(message->pool,
+                              "{
+                                "text" : \"%s\"
+                              }",result);
 
     if(body->buf)
     {
@@ -579,7 +602,7 @@ static apt_bool_t ms_recog_recognition_complete(ms_recog_channel_t* recog_channe
     }
 
     // stop continuous recognition first
-    try
+/*    try
     {
         recog_channel->resource->recognizer->StopContinuousRecognitionAsync();
     }
@@ -588,6 +611,7 @@ static apt_bool_t ms_recog_recognition_complete(ms_recog_channel_t* recog_channe
         apt_log(RECOG_LOG_MARK, APT_PRIO_DEBUG,
                 "Stop recognizer failed. Maybe reset already.");
     }
+    */
 
     recog_channel->resource->recognizing = false;
 
