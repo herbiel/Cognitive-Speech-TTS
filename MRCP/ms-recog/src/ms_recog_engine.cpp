@@ -34,6 +34,8 @@
 
 using namespace Microsoft::CognitiveServices::Speech;
 using namespace Microsoft::speechlib;
+/* sdk log 配置*/
+using namespace Microsoft::CognitiveServices::Speech::Diagnostics::Logging;
 
 #define RECOG_ENGINE_TASK_NAME "MS Recog Engine"
 
@@ -87,6 +89,8 @@ struct RecogResource
 {
     int count = 0;
     std::string result;
+    /* sdk log 配置*/
+    std::string logFile = "speech-sdk-log.txt";
 
     std::shared_ptr<SpeechConfig> config;
     char* channelId{};
@@ -97,6 +101,8 @@ struct RecogResource
 
     RecogResource()
     {
+        /* sdk log 配置*/
+        FileLogger::Start(logFile);
         if(ConfigManager::GetBoolValue(Common::SPEECH_SECTION, Common::SR_USE_LOCAL_CONTAINER))
         {
             static auto localKey =
@@ -438,6 +444,9 @@ static apt_bool_t ms_recog_channel_recognize(mrcp_engine_channel_t* channel,
                         "Stop recognizer failed. Maybe reset already.");
             }
         }
+        /*sdk log 配置*/
+        FileLogger::Stop();
+
     });
 
     recog_channel->resource->recognizer->Canceled.Connect(
