@@ -109,8 +109,11 @@ struct RecogResource
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SR_LOCAL_KEY);
             static auto endpoint =
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SR_LOCAL_ENDPOINT);
+            static auto language =
+            ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_LANGUAGE);
 
             config = SpeechConfig::FromEndpoint(endpoint, localKey);
+            config->SetSpeechRecognitionLanguage(language);
         }
         else
         {
@@ -119,8 +122,10 @@ struct RecogResource
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_SDK_KEY);
             static auto region =
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_SDK_REGION);
-
+            sstatic auto language =
+            ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_LANGUAGE);
             config = SpeechConfig::FromSubscription(subscriptionKey, region);
+            config->SetSpeechRecognitionLanguage(language);
         }
         
         recognized = false;
@@ -344,7 +349,20 @@ static apt_bool_t ms_recog_channel_recognize(mrcp_engine_channel_t* channel,
         response->start_line.status_code = MRCP_STATUS_CODE_METHOD_FAILED;
         return FALSE;
     }
-
+	if(!recog_channel->audio_out) {
+		const apt_dir_layout_t *dir_layout = channel->engine->dir_layout;
+		char *file_name = apr_psprintf(channel->pool,"utter-%dkHz-%s.pcm",
+							descriptor->sampling_rate/1000,
+							request->channel_id.session_id.buf);
+		char *file_path = apt_vardir_filepath_get(dir_layout,file_name,channel->pool);
+		if(file_path) {
+			apt_log(RECOG_LOG_MARK,APT_PRIO_INFO,"Open Utterance Output File [%s] for Writing",file_path);
+			recog_channel->audio_out = fopen(file_path,"wb");
+			if(!recog_channel->audio_out) {
+				apt_log(RECOG_LOG_MARK,APT_PRIO_WARNING,"Failed to Open Utterance Output File [%s] for Writing",file_path);
+			}
+		}
+	}
     recog_channel->timers_started = TRUE;
 
     /* get recognizer header */
