@@ -584,7 +584,7 @@ static apt_bool_t ms_recog_result_load(ms_recog_channel_t* recog_channel, mrcp_m
     const auto body = &message->body;
 
     const auto result = recog_channel->resource->result.c_str();
-/*    body->buf = apr_psprintf(message->pool,
+    body->buf = apr_psprintf(message->pool,
                              "<?xml version=\"1.0\"?>\n"
                              "<result>\n"
                              "  <interpretation confidence=\"%d\">\n"
@@ -593,11 +593,8 @@ static apt_bool_t ms_recog_result_load(ms_recog_channel_t* recog_channel, mrcp_m
                              "  </interpretation>\n"
                              "</result>\n",
                              99, result, result);
-                             */
-    body->buf = apr_psprintf(message->pool,
-                              "{
-                                "text" : \"%s\"
-                              }",result);
+                            
+
 
     if(body->buf)
     {
