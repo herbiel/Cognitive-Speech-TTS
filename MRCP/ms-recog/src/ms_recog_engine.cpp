@@ -122,7 +122,7 @@ struct RecogResource
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_SDK_KEY);
             static auto region =
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_SDK_REGION);
-            sstatic auto language =
+            static auto language =
             ConfigManager::GetStrValue(Common::SPEECH_SECTION, Common::SPEECH_LANGUAGE);
             config = SpeechConfig::FromSubscription(subscriptionKey, region);
             config->SetSpeechRecognitionLanguage(language);
